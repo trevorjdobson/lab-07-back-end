@@ -1,7 +1,7 @@
 'Use strict'
 
+//Dependencies
 require('dotenv').config();
-
 const express = require('express');
 const cors = require('cors');
 const superagent = require('superagent');
@@ -11,6 +11,8 @@ const PORT = process.env.PORT || 3001;
 const app = express();
 app.use(cors());
 
+
+//Routes
 app.get('/location', searchLatLong);
 
 app.get('/weather', searchWeather);
@@ -18,6 +20,9 @@ app.get('/weather', searchWeather);
 app.use('*',(req, res)=> {
   res.send('You got in the wrong place')
 })
+
+
+/*--Functions--*/
 
 function FormattedLocation(query, data){
   this.search_query = query;
@@ -66,6 +71,7 @@ function searchWeather(request,response){
 }
 
 
+//Starting Server
 app.listen(PORT, () =>{
   console.log('listing on port', PORT);
 })

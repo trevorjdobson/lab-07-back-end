@@ -4,6 +4,7 @@
 **Version**: 1.0.0 (increment the patch/fix version number if you make more commits past your first submission)
 
 **Time Estimates**:
+## Lab:06
 Number and name of feature: Location and Weather
 
 Estimate of time needed to complete: 2 hours
@@ -13,6 +14,17 @@ Start time: 9.30 am
 Finish time: 1.30 pm
 
 Actual time needed to complete: 3 hours
+
+## Lab-07
+Number and name of feature: Location, weather and eventBrite API calls and Display
+
+Estimate of time needed to complete: 2 hours
+
+Start time: 9.30 am
+
+Finish time: 11.30am
+
+Actual time needed to complete: 2 hours
 
 ## Overview
 <!-- Provide a high level overview of what this application is and why you are building it, beyond the fact that it's an assignment for this class. (i.e. What's your problem domain?) -->

@@ -4,22 +4,14 @@ require('dotenv').config();
 
 const express = require('express');
 const cors = require('cors');
+const superagent = require('superagent');
 
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 
 const app = express();
 app.use(cors());
 
-app.get('/location', (req,res)=>{
-  try {
-    const locationData = searchLatLong(req.query.data);
-    res.send(locationData);
-  }
-  catch(error){
-    console.error(error);
-    res.status(500).send('Status 500');
-  }
-})
+app.get('/location', searchLatLong);
 
 app.get('/weather', (req,res)=>{
   try{
@@ -38,6 +30,7 @@ app.use('*',(req, res)=> {
 })
 
 function FormattedLocation(query, data){
+  console.log(data);
   this.search_query = query;
   this.formatted_query = data.results[0].formatted_address;
   this.latitude = data.results[0].geometry.location.lat;
@@ -49,12 +42,20 @@ function FormattedDailyWeather(data){
   this.time = new Date(data.time*1000).toDateString();
 }
 
-function searchLatLong(query){
-  const geoData = require('./data/geo.json');
-  let fakeQuery = 'seattle'
-  const location = new FormattedLocation(fakeQuery,geoData);
-  console.log(location)
-  return location;
+function searchLatLong(request,response){
+  console.log(request.query.data);
+  let locationName = request.query.data || 'seattle';
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${locationName}&key=${process.env.GEOCODE_API_KEY}`
+
+  superagent.get(url)
+    .then(result => {
+      console.log(result.body);
+      let location = new FormattedLocation(locationName, result.body);
+      response.send(location);
+    }).catch(e=>{
+      console.error(e);
+      response.status(500).send('Status 500')
+    })
 }
 
 function searchWeather(query){

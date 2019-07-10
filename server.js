@@ -13,24 +13,13 @@ app.use(cors());
 
 app.get('/location', searchLatLong);
 
-app.get('/weather', (req,res)=>{
-  try{
-    const weatherData = searchWeather(req.query.data);
-    console.log(weatherData);
-    res.send(weatherData);
-  }
-  catch(error){
-    console.log(error);
-    res.status(500).send('status 500');
-  }
-})
+app.get('/weather', searchWeather);
 
 app.use('*',(req, res)=> {
   res.send('You got in the wrong place')
 })
 
 function FormattedLocation(query, data){
-  console.log(data);
   this.search_query = query;
   this.formatted_query = data.results[0].formatted_address;
   this.latitude = data.results[0].geometry.location.lat;
@@ -43,7 +32,6 @@ function FormattedDailyWeather(data){
 }
 
 function searchLatLong(request,response){
-  console.log(request.query.data);
   let locationName = request.query.data || 'seattle';
   const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${locationName}&key=${process.env.GEOCODE_API_KEY}`
 
@@ -58,14 +46,23 @@ function searchLatLong(request,response){
     })
 }
 
-function searchWeather(query){
-  const weatherData = require('./data/darksky.json');
-  let forcastArr = weatherData.daily.data;
-  let result = [];
-  forcastArr.forEach(element => {
-    result.push(new FormattedDailyWeather(element))
-  })
-  return result;
+function searchWeather(request,response){
+  console.log(request.query.data.latitude)
+  let lat = request.query.data.latitude;
+  let long = request.query.data.longitude;
+  let weatherLocation = `${lat},${long}` || '37.8267,-122.4233';
+  const url = `https://api.darksky.net/forecast/${process.env.WEATHER_API_KEY}/${weatherLocation}`
+  superagent.get(url)
+    .then(result => {
+      console.log(result.body.daily.data);
+      let forecastArr = result.body.daily.data.map(el=>{
+        return new FormattedDailyWeather(el);
+      })
+      response.send(forecastArr);
+    }).catch(e=>{
+      console.error(e);
+      response.status(500).send('Status 500')
+    })
 }
 
 

@@ -57,18 +57,71 @@ function FormattedEvent(data) {
 
 function searchLatLong(request, response) {
   let locationName = request.query.data || 'seattle';
-  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${locationName}&key=${process.env.GEOCODE_API_KEY}`
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${locationName}&key=${process.env.GEOCODE_API_KEY}`;
+
+
 
   superagent.get(url)
     .then(result => {
       // console.log(result.body);
-      let location = new FormattedLocation(locationName, result.body);
-      response.send(location);
+      // let location = new FormattedLocation(locationName, result.body);
+      // response.send(location);
+      
     }).catch(e => {
       console.error(e);
       response.status(500).send('Status 500')
     })
 }
+
+function searchToLatLng(request, response) {
+
+  const locationName = request.query.data;
+  const url = `https://maps.googleapis.com/maps/api/geocode/json?address=${locationName}&key=${process.env.GEOCODE_API_KEY}`;
+
+  // if is in database
+  // go get it from db
+  client.query(`SELECT * FROM locations WHERE search_query=$1`, [locationName])
+    .then(sqlResult => {
+
+      if(sqlResult.rowCount === 0){
+        console.log('getting new data from googles');
+        superagent.get(url)
+          .then(result => {
+
+            let location = new Location(locationName, result)
+
+            // Save the data to postgres
+            // client.query takes two arguments: a sql command, and an array ov values
+            client.query(
+              `INSERT INTO locations (
+          search_query,
+          formatted_query,
+          latitude,
+          longitude
+        ) VALUES ($1, $2, $3, $4)`,
+              [location.search_query, location.formatted_query, location.latitude, location.longitude]
+            )
+
+            response.send(location);
+
+          }).catch(e => {
+            console.error(e);
+            response.status(500).send('Status 500: So sorry i broke');
+          })
+      } else {
+        console.log('sending from db');
+        // send the frontend what was in the db
+        response.send(sqlResult.rows[0]);
+      }
+    });
+
+  // else do everything normal
+
+
+}
+
+
+
 
 function searchWeather(request, response) {
   // console.log(request.query.data.latitude)
